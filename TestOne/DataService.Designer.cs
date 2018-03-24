@@ -17,6 +17,10 @@
             {
                 components.Dispose();
             }
+            if (disposing && (db != null))
+            {
+                db.Dispose();
+            }
             base.Dispose(disposing);
         }
 

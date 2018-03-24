@@ -19,6 +19,8 @@ namespace TestOne
 {
     partial class DataService : ServiceBase
     {
+        private ApplicationDbContext db = new ApplicationDbContext();
+
         public DataService()
         {
             InitializeComponent();
@@ -69,28 +71,25 @@ namespace TestOne
 
                 if (firstSeriesData != null)
                 {
-                    using (var ctx = new ApplicationDbContext())
+                    foreach (var s in firstSeriesData["data"])
                     {
-                        foreach (var s in firstSeriesData["data"])
+                        string dtStr = s[0].Value<string>();
+                        DateTime dt;
+
+                        if (DateTime.TryParseExact(dtStr, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt))
                         {
-                            string dtStr = s[0].Value<string>();
-                            DateTime dt;
+                            double price = s[1].Value<double>();
 
-                            if (DateTime.TryParseExact(dtStr, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt))
+                            if (DateTime.Today < dt.AddDays(DaysCount))
                             {
-                                double price = s[1].Value<double>();
-
-                                if (DateTime.Today < dt.AddDays(DaysCount))
+                                if (!db.FuelPrices.Any(x => x.Date == dt))
                                 {
-                                    if (!ctx.FuelPrices.Any(x => x.Date == dt))
-                                    {
-                                        ctx.FuelPrices.Add(new FuelPrice() { Date = dt, Price = price });
-                                    }
+                                    db.FuelPrices.Add(new FuelPrice() { Date = dt, Price = price });
                                 }
                             }
                         }
-                        ctx.SaveChanges();
                     }
+                    db.SaveChanges();
                 }
             }
         }
